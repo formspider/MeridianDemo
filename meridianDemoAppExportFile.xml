@@ -1,0 +1,1369 @@
+<?xml version="1.0" encoding="UTF-8"?><fsApp exportVersion="42">
+<dataSourceDef allowDelete="N" allowInsert="N" allowUpdate="N" useOracleRowID="N" name="CHARTDS">
+  <query>
+    <value multiPart="N"><![CDATA[select   o.ID,
+         o.CUSTOMER_ID,
+         o.DATE_ORDERED,
+         o.DATE_SHIPPED,
+         o.TOTAL,
+         o.ORDER_FILLED,
+        'N' as SLICED,
+        (o.DATE_SHIPPED - o.DATE_ORDERED) as timeToShip,
+         avg(TOTAL) over (PARTITION by o.customer_id) as orderAverage
+from  S_ORD o
+where o.CUSTOMER_ID=:customer_id
+and (o.DATE_SHIPPED - o.DATE_ORDERED) is not null
+order by o.DATE_ORDERED]]></value>
+  </query>
+  <columns>
+    <column name="CUSTOMER_ID" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="DATE_ORDERED" dataType="DATE" required="N" updatable="Y" domain="DefaultVarchar2"/>
+    <column name="DATE_SHIPPED" dataType="DATE" required="N" updatable="Y" domain="DefaultVarchar2"/>
+    <column name="ID" dataType="NUMBER" length="7" required="Y" updatable="Y"/>
+    <column name="ORDERAVERAGE" dataType="NUMBER" required="N" updatable="Y"/>
+    <column name="ORDER_FILLED" dataType="VARCHAR2" length="1" required="N" updatable="Y"/>
+    <column name="SLICED" dataType="VARCHAR2" length="1" required="N" updatable="Y"/>
+    <column name="TIMETOSHIP" dataType="NUMBER" required="N" updatable="Y"/>
+    <column name="TOTAL" dataType="NUMBER" length="11" precision="2" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="customer_id" domain="DefaultNumber"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef baseObject="S_COUNTRIES" allowDelete="N" allowInsert="N" allowUpdate="N" useOracleRowID="N" name="COUNTRIES">
+  <query>
+    <value multiPart="N"><![CDATA[select ID,COUNTRY,REGION_ID,COUNTRY_CODE
+from S_COUNTRIES]]></value>
+  </query>
+  <columns>
+    <column name="COUNTRY" dataType="VARCHAR2" length="50" required="N" updatable="Y"/>
+    <column name="COUNTRY_CODE" dataType="VARCHAR2" length="2" required="N" updatable="Y"/>
+    <column name="ID" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="REGION_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="id" domain="DefaultNumber"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef baseObject="S_CREDIT_RATING" allowDelete="N" allowInsert="Y" allowUpdate="Y" useOracleRowID="N" name="CREDITRATING">
+  <query>
+    <value multiPart="N"><![CDATA[select ID,RATING,CREDIT_RATING,DESCRIPTION
+from S_CREDIT_RATING]]></value>
+  </query>
+  <columns>
+    <column name="CREDIT_RATING" dataType="VARCHAR2" length="20" required="Y" updatable="Y"/>
+    <column name="DESCRIPTION" dataType="VARCHAR2" length="200" required="N" updatable="Y"/>
+    <column name="ID" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="RATING" dataType="NUMBER" length="7" required="Y" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="ID" domain="DefaultNumber"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef allowDelete="N" allowInsert="N" allowUpdate="N" useOracleRowID="N" name="CUSTOMER">
+  <query>
+    <value multiPart="N"><![CDATA[select c.ID,c.NAME,c.PHONE,c.ADDRESS,c.CITY,c.STATE,c.COUNTRY_ID,c.ZIP_CODE,r.CREDIT_RATING,c.CREDIT_RATING_ID,
+c.SALES_REP_ID,e.LAST_NAME,c.COMMENTS
+from S_CUSTOMER c LEFT OUTER JOIN S_CREDIT_RATING r 
+  ON c.CREDIT_RATING_ID=r.ID
+  LEFT JOIN S_EMP e ON c.SALES_REP_ID = e.id 
+where c.COUNTRY_ID=:countryID
+  and c.ID=:customerID]]></value>
+  </query>
+  <columns>
+    <column name="ADDRESS" dataType="VARCHAR2" length="400" required="N" updatable="Y"/>
+    <column name="CITY" dataType="VARCHAR2" length="30" required="N" updatable="Y"/>
+    <column name="COMMENTS" dataType="VARCHAR2" length="255" required="N" updatable="Y"/>
+    <column name="COUNTRY_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="CREDIT_RATING" dataType="VARCHAR2" length="20" required="N" updatable="Y"/>
+    <column name="CREDIT_RATING_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="ID" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="LAST_NAME" dataType="VARCHAR2" length="25" required="Y" updatable="Y"/>
+    <column name="NAME" dataType="VARCHAR2" length="50" required="Y" updatable="Y"/>
+    <column name="PHONE" dataType="VARCHAR2" length="25" required="N" updatable="Y"/>
+    <column name="SALES_REP_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="STATE" dataType="VARCHAR2" length="20" required="N" updatable="Y"/>
+    <column name="ZIP_CODE" dataType="VARCHAR2" length="75" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="countryID" domain="DefaultNumber"/>
+    <bindvar name="customerID" domain="DefaultVarchar2"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef baseObject="MD_CUSTOMER_ORDERS" allowDelete="Y" allowInsert="Y" allowUpdate="Y" useOracleRowID="N" name="CUSTOMER_ORDERS">
+  <query>
+    <value multiPart="N"><![CDATA[select ID,CUSTOMER_ID,DATE_ORDERED,DATE_SHIPPED,SALES_REP_ID,LAST_NAME,TOTAL,PAYMENT_TYPE_ID,PAYMENT_TYPE,ORDER_FILLED,SLICED
+from MD_CUSTOMER_ORDERS]]></value>
+  </query>
+  <whereClause>
+    <value multiPart="N"><![CDATA[CUSTOMER_ID =:customerID]]></value>
+  </whereClause>
+  <columns>
+    <column name="CUSTOMER_ID" dataType="NUMBER" length="7" required="Y" updatable="Y"/>
+    <column name="DATE_ORDERED" dataType="DATE" required="N" updatable="Y"/>
+    <column name="DATE_SHIPPED" dataType="DATE" required="N" updatable="Y"/>
+    <column name="ID" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="LAST_NAME" dataType="VARCHAR2" length="25" required="N" updatable="Y"/>
+    <column name="ORDER_FILLED" dataType="VARCHAR2" length="1" required="N" updatable="Y"/>
+    <column name="PAYMENT_TYPE" dataType="VARCHAR2" length="20" required="N" updatable="Y"/>
+    <column name="PAYMENT_TYPE_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="SALES_REP_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="SLICED" dataType="VARCHAR2" length="1" required="N" updatable="Y"/>
+    <column name="TOTAL" dataType="NUMBER" length="11" precision="2" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="customerID" domain="DefaultNumber"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef baseObject="S_EMP" allowDelete="N" allowInsert="N" allowUpdate="N" useOracleRowID="N" name="EMPLOYEES">
+  <query>
+    <value multiPart="N"><![CDATA[select ID,LAST_NAME,FIRST_NAME,USERID,EMAIL,START_DATE,COMMENTS,MANAGER_ID,TITLE_ID,DEPT_ID,SALARY,COMMISSION_PCT
+from S_EMP]]></value>
+  </query>
+  <whereClause>
+    <value multiPart="N"><![CDATA[id=:id]]></value>
+  </whereClause>
+  <columns>
+    <column name="COMMENTS" dataType="VARCHAR2" length="255" required="N" updatable="Y"/>
+    <column name="COMMISSION_PCT" dataType="NUMBER" length="4" precision="2" required="N" updatable="Y"/>
+    <column name="DEPT_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="EMAIL" dataType="VARCHAR2" length="100" required="N" updatable="Y"/>
+    <column name="FIRST_NAME" dataType="VARCHAR2" length="25" required="N" updatable="Y"/>
+    <column name="ID" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="LAST_NAME" dataType="VARCHAR2" length="25" required="Y" updatable="Y"/>
+    <column name="MANAGER_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="SALARY" dataType="NUMBER" length="11" precision="2" required="N" updatable="Y"/>
+    <column name="START_DATE" dataType="DATE" required="N" updatable="Y"/>
+    <column name="TITLE_ID" dataType="NUMBER" required="N" updatable="Y"/>
+    <column name="USERID" dataType="VARCHAR2" length="8" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="id" domain="DefaultNumber"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef allowDelete="N" allowInsert="N" allowUpdate="N" useOracleRowID="N" name="INVENTORY">
+  <query>
+    <value multiPart="N"><![CDATA[select PRODUCT_ID,
+       WAREHOUSE_ID,
+       AMOUNT_IN_STOCK,
+       w.ADDRESS,
+       w.CITY
+from S_INVENTORY i join S_WAREHOUSE w
+on i.warehouse_id=w.id
+and i.product_id=:product_id]]></value>
+  </query>
+  <columns>
+    <column name="ADDRESS" dataType="VARCHAR2" length="50" required="N" updatable="Y"/>
+    <column name="AMOUNT_IN_STOCK" dataType="NUMBER" length="9" required="N" updatable="Y"/>
+    <column name="CITY" dataType="VARCHAR2" length="30" required="N" updatable="Y"/>
+    <column name="PRODUCT_ID" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="WAREHOUSE_ID" dataType="NUMBER" length="7" required="Y" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="product_id" domain="DefaultNumber"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef allowDelete="N" allowInsert="N" allowUpdate="N" useOracleRowID="N" name="ORDER_AVERAGE">
+  <query>
+    <value multiPart="N"><![CDATA[select customer_id ,avg(total) as average from S_ORD
+WHERE CUSTOMER_ID=:customer_id
+group by CUSTOMER_ID]]></value>
+  </query>
+  <columns>
+    <column name="AVERAGE" dataType="NUMBER" required="N" updatable="Y"/>
+    <column name="CUSTOMER_ID" dataType="NUMBER" length="7" required="Y" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="customer_id" domain="DefaultNumber"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef baseObject="MD_ORDER_ITEMS" allowDelete="Y" allowInsert="Y" allowUpdate="Y" useOracleRowID="N" name="ORDER_ITEMS">
+  <query>
+    <value multiPart="N"><![CDATA[select ORD_ID,ITEM_ID,PRODUCT_ID,NAME,SHORT_DESC,IMAGE,PRICE,QUANTITY,QUANTITY_SHIPPED,TOTAL
+from MD_ORDER_ITEMS]]></value>
+  </query>
+  <whereClause>
+    <value multiPart="N"><![CDATA[ORD_ID =:ordID]]></value>
+  </whereClause>
+  <columns>
+    <column name="IMAGE" dataType="BLOB" required="N" updatable="Y"/>
+    <column name="ITEM_ID" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="NAME" dataType="VARCHAR2" length="50" required="Y" updatable="Y"/>
+    <column name="ORD_ID" dataType="NUMBER" length="7" required="Y" updatable="Y"/>
+    <column name="PRICE" dataType="NUMBER" length="11" precision="2" required="N" updatable="Y"/>
+    <column name="PRODUCT_ID" dataType="NUMBER" length="7" required="Y" updatable="Y"/>
+    <column name="QUANTITY" dataType="NUMBER" length="9" required="N" updatable="Y"/>
+    <column name="QUANTITY_SHIPPED" dataType="NUMBER" length="9" required="N" updatable="Y"/>
+    <column name="SHORT_DESC" dataType="VARCHAR2" length="255" required="N" updatable="Y"/>
+    <column name="TOTAL" dataType="NUMBER" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="ordID" domain="DefaultNumber"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef baseObject="S_PAYMENT_TYPE" allowDelete="N" allowInsert="Y" allowUpdate="Y" useOracleRowID="N" name="PAYMENT_TYPE">
+  <query>
+    <value multiPart="N"><![CDATA[select ID,PAYMENT_TYPE,DESCRIPTION
+from S_PAYMENT_TYPE]]></value>
+  </query>
+  <columns>
+    <column name="DESCRIPTION" dataType="VARCHAR2" length="100" required="N" updatable="Y"/>
+    <column name="ID" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="PAYMENT_TYPE" dataType="VARCHAR2" length="20" required="Y" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="ID" domain="DefaultNumber"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef baseObject="S_PRODUCT" allowDelete="N" allowInsert="Y" allowUpdate="Y" useOracleRowID="N" name="PRODUCT">
+  <query>
+    <value multiPart="N"><![CDATA[select ID,NAME,SHORT_DESC,LONGTEXT_ID,IMAGE_ID,CATEGORY_ID,SUGGESTED_WHLSL_PRICE,WHLSL_UNITS
+from S_PRODUCT]]></value>
+  </query>
+  <columns>
+    <column name="CATEGORY_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="ID" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="IMAGE_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="LONGTEXT_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="NAME" dataType="VARCHAR2" length="50" required="Y" updatable="Y"/>
+    <column name="SHORT_DESC" dataType="VARCHAR2" length="255" required="N" updatable="Y"/>
+    <column name="SUGGESTED_WHLSL_PRICE" dataType="NUMBER" length="11" precision="2" required="N" updatable="Y"/>
+    <column name="WHLSL_UNITS" dataType="VARCHAR2" length="25" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables/>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef baseObject="S_EMP" allowDelete="N" allowInsert="Y" allowUpdate="Y" useOracleRowID="N" name="SALESPEOPLE">
+  <query>
+    <value multiPart="N"><![CDATA[select ID,LAST_NAME,FIRST_NAME,USERID,EMAIL,START_DATE,COMMENTS,MANAGER_ID,TITLE_ID,DEPT_ID,SALARY,COMMISSION_PCT
+from S_EMP]]></value>
+  </query>
+  <whereClause>
+    <value multiPart="N"><![CDATA[title_id=2]]></value>
+  </whereClause>
+  <columns>
+    <column name="COMMENTS" dataType="VARCHAR2" length="255" required="N" updatable="Y"/>
+    <column name="COMMISSION_PCT" dataType="NUMBER" length="4" precision="2" required="N" updatable="Y"/>
+    <column name="DEPT_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="EMAIL" dataType="VARCHAR2" length="100" required="N" updatable="Y"/>
+    <column name="FIRST_NAME" dataType="VARCHAR2" length="25" required="N" updatable="Y"/>
+    <column name="ID" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="LAST_NAME" dataType="VARCHAR2" length="25" required="Y" updatable="Y"/>
+    <column name="MANAGER_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="SALARY" dataType="NUMBER" length="11" precision="2" required="N" updatable="Y"/>
+    <column name="START_DATE" dataType="DATE" required="N" updatable="Y"/>
+    <column name="TITLE_ID" dataType="NUMBER" required="N" updatable="Y"/>
+    <column name="USERID" dataType="VARCHAR2" length="8" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables/>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef allowDelete="N" allowInsert="N" allowUpdate="N" useOracleRowID="N" name="SEARCHDS">
+  <query>
+    <value multiPart="N"><![CDATA[select ID,COUNTRY_ID,NAME,CITY,SALES_REP_ID
+from S_CUSTOMER
+where (CITY like :city) 
+AND (NAME like :name)]]></value>
+  </query>
+  <columns>
+    <column name="CITY" dataType="VARCHAR2" length="30" required="N" updatable="Y"/>
+    <column name="COUNTRY_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="ID" dataType="NUMBER" length="7" required="Y" updatable="Y"/>
+    <column name="NAME" dataType="VARCHAR2" length="50" required="Y" updatable="Y"/>
+    <column name="SALES_REP_ID" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="city" domain="DefaultVarchar2"/>
+    <bindvar name="name" domain="DefaultVarchar2"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef allowDelete="N" allowInsert="N" allowUpdate="N" useOracleRowID="N" name="aux_navigationCountries">
+  <query>
+    <value multiPart="N"><![CDATA[select ID as country_id,
+       COUNTRY_CODE as code,
+       ID||'-'||COUNTRY as idname,
+       'Bold' as fontStyle,
+     'apps/meridianDemo/images/flags/'||COUNTRY||'.png' as iconPath
+from S_COUNTRIES
+order by country_id]]></value>
+  </query>
+  <columns>
+    <column name="CODE" dataType="VARCHAR2" length="2" primaryKey="Y" required="N" updatable="Y"/>
+    <column name="COUNTRY_ID" dataType="NUMBER" length="7" required="Y" updatable="Y"/>
+    <column name="FONTSTYLE" dataType="VARCHAR2" length="4" required="N" updatable="Y"/>
+    <column name="ICONPATH" dataType="VARCHAR2" length="85" required="N" updatable="Y"/>
+    <column name="IDNAME" dataType="VARCHAR2" length="91" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables/>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef allowDelete="N" allowInsert="N" allowUpdate="N" useOracleRowID="N" name="aux_navigationCustomers">
+  <query>
+    <value multiPart="N"><![CDATA[select ID||'-'||NAME as idname, 
+       ID as code,
+       COUNTRY_ID AS country,
+       'Italic' as fontStyle,
+       md_auxnavigation.leaf as nodeState,
+       'apps/meridianDemo/images/leaf.png' as iconPath
+from S_CUSTOMER
+where country_id = :countryID
+order by name]]></value>
+  </query>
+  <columns>
+    <column name="CODE" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="COUNTRY" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="FONTSTYLE" dataType="VARCHAR2" length="6" required="N" updatable="Y"/>
+    <column name="ICONPATH" dataType="VARCHAR2" length="33" required="N" updatable="Y"/>
+    <column name="IDNAME" dataType="VARCHAR2" length="91" required="N" updatable="Y"/>
+    <column name="NODESTATE" dataType="VARCHAR2" length="4000" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="countryID" domain="DefaultNumber"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef allowDelete="N" allowInsert="N" allowUpdate="N" useOracleRowID="N" name="aux_navigationSRCustomers">
+  <query>
+    <value multiPart="N"><![CDATA[select ID||'-'||NAME as idname, 
+       ID as code,
+       COUNTRY_ID AS country,
+       'Italic' as fontStyle,
+        md_auxnavigation.leaf as nodeState,
+       'apps/meridianDemo/images/leaf.png' as iconPath
+from S_CUSTOMER
+where sales_rep_id = :salesRepID
+order by code]]></value>
+  </query>
+  <columns>
+    <column name="CODE" dataType="NUMBER" length="7" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="COUNTRY" dataType="NUMBER" length="7" required="N" updatable="Y"/>
+    <column name="FONTSTYLE" dataType="VARCHAR2" length="6" required="N" updatable="Y"/>
+    <column name="ICONPATH" dataType="VARCHAR2" length="33" required="N" updatable="Y"/>
+    <column name="IDNAME" dataType="VARCHAR2" length="91" required="N" updatable="Y"/>
+    <column name="NODESTATE" dataType="VARCHAR2" length="4000" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables>
+    <bindvar name="salesRepID" domain="DefaultNumber"/>
+  </bindVariables>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef allowDelete="N" allowInsert="N" allowUpdate="N" useOracleRowID="N" name="aux_navigationSRTree">
+  <query>
+    <value multiPart="N"><![CDATA[select ID as emp_id,
+       USERID as code,
+       ID||'-'||first_name||' '||last_name as idname,
+       'Bold' as fontStyle,
+      'apps/meridianDemo/images/folder.jpg' as iconPath
+from S_EMP
+where title_id=2
+order by emp_id]]></value>
+  </query>
+  <columns>
+    <column name="CODE" dataType="VARCHAR2" length="8" primaryKey="Y" required="Y" updatable="Y"/>
+    <column name="EMP_ID" dataType="NUMBER" length="7" required="Y" updatable="Y"/>
+    <column name="FONTSTYLE" dataType="VARCHAR2" length="4" required="N" updatable="Y"/>
+    <column name="ICONPATH" dataType="VARCHAR2" length="35" required="N" updatable="Y"/>
+    <column name="IDNAME" dataType="VARCHAR2" length="92" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables/>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSourceDef allowDelete="N" allowInsert="N" allowUpdate="N" description="this is the main query for the tree created in the panel aux_sMNavTreeBrowse" useOracleRowID="N" name="aux_navigationTree">
+  <query>
+    <value multiPart="N"><![CDATA[select 'Customers' as idname, 
+       'COUNTRIES' as code,
+       'Bold' as fontStyle,
+        md_auxnavigation.collapsed as nodeState,
+       'List of Countries' as tooltip,
+       '' as iconPath
+from dual]]></value>
+  </query>
+  <columns>
+    <column name="CODE" dataType="VARCHAR2" length="9" required="N" updatable="Y"/>
+    <column name="FONTSTYLE" dataType="VARCHAR2" length="4" required="N" updatable="Y"/>
+    <column name="ICONPATH" dataType="VARCHAR2" length="4000" required="N" updatable="Y"/>
+    <column name="IDNAME" dataType="VARCHAR2" length="9" required="N" updatable="Y"/>
+    <column name="NODESTATE" dataType="VARCHAR2" length="4000" required="N" updatable="Y"/>
+    <column name="TOOLTIP" dataType="VARCHAR2" length="17" required="N" updatable="Y"/>
+  </columns>
+  <bindVariables/>
+  <criterionGroup enforceOneCriterion="N"/>
+</dataSourceDef>
+
+<dataSource dataSourceDef="CHARTDS" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="CHARTDS1"/>
+
+<dataSource dataSourceDef="COUNTRIES" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="COUNTRIES1"/>
+
+<dataSource dataSourceDef="CREDITRATING" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="CREDITRATING1"/>
+
+<dataSource dataSourceDef="CUSTOMER" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="CUSTOMER1"/>
+
+<dataSource dataSourceDef="CUSTOMER_ORDERS" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="CUSTOMER_ORDERS1"/>
+
+<dataSource dataSourceDef="EMPLOYEES" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="EMPLOYEES1"/>
+
+<dataSource dataSourceDef="INVENTORY" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="INVENTORY1"/>
+
+<dataSource dataSourceDef="ORDER_AVERAGE" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="ORDER_AVERAGE1"/>
+
+<dataSource dataSourceDef="ORDER_ITEMS" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="ORDER_ITEMS1"/>
+
+<dataSource dataSourceDef="PAYMENT_TYPE" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="PAYMENT_TYPE1"/>
+
+<dataSource dataSourceDef="PRODUCT" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="PRODUCT1"/>
+
+<dataSource dataSourceDef="SALESPEOPLE" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="SALESPEOPLE1"/>
+
+<dataSource dataSourceDef="SEARCHDS" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="SEARCHDS1"/>
+
+<dataSource dataSourceDef="aux_navigationCountries" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="aux_navigationCountries1"/>
+
+<dataSource dataSourceDef="aux_navigationCustomers" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="aux_navigationCustomers1"/>
+
+<dataSource dataSourceDef="aux_navigationSRCustomers" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="aux_navigationSRCustomers1"/>
+
+<dataSource dataSourceDef="aux_navigationSRTree" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="aux_navigationSRTree1"/>
+
+<dataSource dataSourceDef="aux_navigationTree" queryOnInitialize="Y" maxRowFetch="-1" forceCurrentRow="N" currentRowDeleteAction="none" name="aux_navigationTree1"/>
+
+<mainframe title="Meridian Demo" width="500" height="600" maximizeOnStartUp="Y" titleBarVisible="N" name="mainFrame">
+  <borderLayout>
+    <cell docking="Center">
+      <include panelName="mainPanel"/>
+    </cell>
+  </borderLayout>
+</mainframe>
+
+<dialog width="500" height="500" name="customer_citySearchDetach">
+  <borderLayout>
+    <cell docking="Center">
+      <include panelName="search_nameCityDetach"/>
+    </cell>
+  </borderLayout>
+</dialog>
+
+<dialog menuBar="commonMenu" title="Detach Table" width="500" height="500" name="customer_ordersGridDetach">
+  <borderLayout>
+    <cell docking="North" height="25">
+      <include panelName="customer_ordersGridDetach_menu"/>
+    </cell>
+    <cell docking="Center">
+      <include panelName="customer_ordersGridDetach"/>
+    </cell>
+  </borderLayout>
+</dialog>
+
+<panel name="about">
+  <tableLayout>
+    <row>
+      <cell hAlign="Full" vAlign="Top" childHeight="50">
+        <textLabel font-size="10" label="Meridian Demo is provided as is.No support.If used for any purpose please include this notice and the the readme file @Nicholas Mwaura" text-align="Left"/>
+      </cell>
+    </row>
+  </tableLayout>
+</panel>
+
+<panel backgroundColor="White" borderType="LoweredBevelBorder" name="aux_gInventoryControl"/>
+
+<panel backgroundColor="#ccd6e8" name="aux_gWelcome">
+  <tableLayout>
+    <row>
+      <cell hAlign="Full" vAlign="Full">
+        <textLabel font-style="Bold" font-size="20" label="Meridian Demo" text-align="Center"/>
+      </cell>
+    </row>
+  </tableLayout>
+</panel>
+
+<splitPanel backgroundColor="#ccd6e8" dividerLocation="250" name="aux_gsManagement">
+  <left panelName="aux_sMNavTreeTabs"/>
+  <right panelName="aux_sMmainWorkAreaTabs"/>
+</splitPanel>
+
+<tabbedPanel tabPlacement="Top" name="aux_mainTabPanel">
+  <tab panelName="aux_gsManagement" order="1" title="Meridian Management"/>
+  <tab panelName="aux_gWelcome" order="2" title="Welcome"/>
+  <tab panelName="aux_gInventoryControl" order="3" title="Inventory Control"/>
+</tabbedPanel>
+
+<panel backgroundColor="#ccd6e8" name="aux_sMNavTreeBrowse">
+  <events>
+    <postInitialize action="aux_expandByCountry"/>
+  </events>
+  <xyLayout>
+    <cell x="0" y="0" width="250" height="600">
+      <tree font-size="12" name="mainPageTree" enable="Y" backgroundColor="#ccd6e8" displayColumn="IDNAME" nodeKeyColumn="CODE" iconColumn="ICONPATH" fontStyleColumn="FONTSTYLE" dataSource="aux_navigationTree1" selectionColor="gray" nodeStateColumn="NODESTATE">
+        <events>
+          <expanded action="aux_expandTree"/>
+          <leftClick action="aux_leftClickTree"/>
+        </events>
+      </tree>
+    </cell>
+    <cell x="200" y="0" width="45" height="20">
+      <menuButton backgroundColor="gray" icon="apps/meridianDemo/images/icons/tree.png" popupMenu="aux_treeSelection"/>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel preferredWidth="250" name="aux_sMNavTreeSearch">
+  <xyLayout>
+    <cell x="50" y="20" width="150" height="20">
+      <textField name="txtName" label="Name"/>
+    </cell>
+    <cell x="50" y="50" width="150" height="20">
+      <textField name="txtCity" label="City"/>
+    </cell>
+    <cell x="100" y="80" width="50" height="20">
+      <button name="searchButton" label="Search">
+        <events>
+          <buttonPress action="search_searchNameCity"/>
+        </events>
+      </button>
+    </cell>
+    <cell x="150" y="80" width="50" height="20">
+      <button label="Reset">
+        <events>
+          <buttonPress action="search_clearNameCity"/>
+        </events>
+      </button>
+    </cell>
+    <cell x="5" y="115" width="240" height="45">
+      <include panelName="search_nameCityDetach_menu"/>
+    </cell>
+    <cell x="5" y="140" width="242" height="506">
+      <grid name="nameCitySearchGrid" dataSource="SEARCHDS1" mouseHover="N" enableColumnResize="Y" enableColumnSort="Y" enableColumnFunctions="Y" autoExpand="Y">
+        <events>
+          <click action="search_showSearchResult"/>
+        </events>
+        <column headerLabel="Name" width="120">
+          <textField column="NAME"/>
+        </column>
+        <column headerLabel="City" width="120">
+          <textField column="CITY"/>
+        </column>
+      </grid>
+    </cell>
+  </xyLayout>
+</panel>
+
+<tabbedPanel name="aux_sMNavTreeTabs">
+  <tab panelName="aux_sMNavTreeBrowse" order="10" title="Browse"/>
+  <tab panelName="aux_sMNavTreeSearch" order="20" title="Search"/>
+  <tab panelName="about" order="30" title="About"/>
+</tabbedPanel>
+
+<panel name="aux_sMmainWorkAreaSplash">
+  <tableLayout>
+    <row>
+      <cell hAlign="Full" vAlign="Center">
+        <textLabel font-style="Bold" font-size="20" label="Meridian Demo" text-align="Center"/>
+      </cell>
+    </row>
+  </tableLayout>
+</panel>
+
+<tabbedPanel name="aux_sMmainWorkAreaTabs">
+  <events>
+    <postTabChanged action="aux_displayTabContent"/>
+    <postTabClosed action="aux_displayTabContent"/>
+  </events>
+  <tab panelName="aux_sMmainWorkAreaSplash" order="1" title="Meridian Demo" name="aux_sMmainWorkAreaTabs"/>
+</tabbedPanel>
+
+<panel backgroundColor="#ccd6e8" name="aux_statusBarPanel">
+  <xyLayout>
+    <cell x="450" y="5" name="stbc" width="550">
+      <textLabel name="st" label="Display Output here by calling sb.print(string)" text-align="Center"/>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel name="awx_localWorkArea">
+  <xyLayout>
+    <cell x="5" y="5" width="950" height="655">
+      <include panelName="awx_localWorkAreaTabs"/>
+    </cell>
+    <cell x="800" y="0" width="70" height="20">
+      <button name="rollBackButton" styleClass="my-bdf-button" label="Rollback" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/rollback.png">
+        <events>
+          <buttonPress action="awx_doRollback"/>
+        </events>
+      </button>
+    </cell>
+    <cell x="880" y="0" width="70">
+      <button name="commitButton" styleClass="my-bdf-button" label="Commit" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/save.png">
+        <events>
+          <buttonPress action="awx_doCommit"/>
+        </events>
+      </button>
+    </cell>
+  </xyLayout>
+</panel>
+
+<tabbedPanel name="awx_localWorkAreaTabs">
+  <events>
+    <postTabChanged action="order_getOrderInfo"/>
+  </events>
+  <tab panelName="customer_infoPanel" order="10" title="Customer" name="customer_infoPanel"/>
+  <tab panelName="order_infoPanel" order="20" title="Orders" name="order_infoPanel"/>
+  <tab panelName="dashBoard_panel" order="30" title="Orders Dashboard" name="dashBoard_panel"/>
+</tabbedPanel>
+
+<accordionPanel multiExpand="Y" resizable="Y" name="customer_accordion">
+  <accordion panelName="customer_generalPanel" order="1" title="General Information" height="100" expanded="Y"/>
+  <accordion panelName="customer_addressPanel" order="2" title="Address" height="100" expanded="N"/>
+  <accordion panelName="customer_commentPanel" order="3" title="Comments" height="100" expanded="N"/>
+  <accordion panelName="customer_ordersGrid" order="4" title="Orders" expanded="Y"/>
+</accordionPanel>
+
+<panel name="customer_addressPanel">
+  <xyLayout>
+    <cell x="100" y="10" width="180" height="20">
+      <textField label="Address" column="ADDRESS" dataSource="CUSTOMER1"/>
+    </cell>
+    <cell x="350" y="10" width="150" height="20">
+      <comboBox filter="N" label="Country" displayColumn="COUNTRY" valueColumn="ID" displayNullOption="Y" column="COUNTRY_ID" dataSource="CUSTOMER1" listDataSource="COUNTRIES1"/>
+    </cell>
+    <cell x="100" y="35" width="150" height="20">
+      <textField label="City" column="CITY" dataSource="CUSTOMER1"/>
+    </cell>
+    <cell x="350" y="35" width="50" height="20">
+      <textField label="Zip Code" column="ZIP_CODE" dataSource="CUSTOMER1"/>
+    </cell>
+    <cell x="100" y="60" width="50" height="20">
+      <textField label="State" column="STATE" dataSource="CUSTOMER1"/>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel name="customer_commentPanel">
+  <xyLayout>
+    <cell x="100" y="10" width="500" height="80">
+      <textArea wordWrap="Y" column="COMMENTS" dataSource="CUSTOMER1"/>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel name="customer_generalPanel">
+  <xyLayout>
+    <cell x="100" y="20" width="50" height="20">
+      <textField label="Customer Id" column="ID" dataSource="CUSTOMER1"/>
+    </cell>
+    <cell x="350" y="20" width="100" height="20">
+      <comboBox name="creditRating" filter="N" label="Credit Rating" displayColumn="CREDIT_RATING" valueColumn="ID" column="CREDIT_RATING" dataSource="CUSTOMER1" listDataSource="CREDITRATING1"/>
+    </cell>
+    <cell x="100" y="45" width="150" height="20">
+      <textField label="Name" column="NAME" dataSource="CUSTOMER1"/>
+    </cell>
+    <cell x="350" y="45" width="50" height="20">
+      <textField name="salesRepId" styleClass="my-bdf-textfield-trigger" tooltip="Search Sales Rep id" label="Sales Rep id" editable="N" column="SALES_REP_ID" dataSource="CUSTOMER1" icon="apps/meridianDemo/images/icons/search.png">
+        <events>
+          <iconClick action="search_SalesRep"/>
+        </events>
+      </textField>
+    </cell>
+    <cell x="100" y="70" width="100" height="20">
+      <textField label="Phone" column="PHONE" dataSource="CUSTOMER1"/>
+    </cell>
+    <cell x="250" y="70" width="100" height="20">
+      <textLabel font-style="Bold" name="txtLabel_salesRepName" label="Sales Rep Name" text-align="Center"/>
+    </cell>
+    <cell x="350" y="70" width="100" height="20">
+      <textLabel name="lastName" label="lastNameData" column="LAST_NAME" dataSource="CUSTOMER1"/>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel name="customer_infoPanel">
+  <tableLayout>
+    <row>
+      <cell width="950" hAlign="Full">
+        <include panelName="customer_accordion"/>
+      </cell>
+    </row>
+  </tableLayout>
+</panel>
+
+<panel name="customer_ordersGrid">
+  <borderLayout>
+    <cell docking="North" height="25">
+      <include panelName="customer_ordersGrid_menu"/>
+    </cell>
+    <cell docking="Center">
+      <grid name="ordersGrid" dataSource="CUSTOMER_ORDERS1" mouseHover="N" enableColumnResize="Y" enableColumnSort="Y" enableColumnFilter="Y" enableColumnFunctions="Y" autoExpand="Y">
+        <events>
+          <click action="customer_clickOrdersGrid"/>
+        </events>
+        <column headerLabel="Order Id" width="70">
+          <textField name="ID" editable="N" column="ID"/>
+        </column>
+        <column headerLabel="Customer Id" width="100">
+          <textField editable="N" column="CUSTOMER_ID"/>
+        </column>
+        <column headerLabel="Date Ordered">
+          <dateField name="dateOrdered" dateFormat="DD-MM-YYYY" column="DATE_ORDERED"/>
+        </column>
+        <column headerLabel="Date Shipped">
+          <dateField name="dateShipped" dateFormat="DD-MM-YYYY" column="DATE_SHIPPED">
+            <events>
+              <valueChanged action="customer_shippedDate"/>
+            </events>
+          </dateField>
+        </column>
+        <column headerLabel="Total">
+          <textField editable="N" numberMask="###,###,###.00#" column="TOTAL"/>
+        </column>
+        <column headerLabel="Payment Type">
+          <comboBox name="paymentType" filter="N" displayColumn="PAYMENT_TYPE" valueColumn="ID" column="PAYMENT_TYPE" listDataSource="PAYMENT_TYPE1">
+            <events>
+              <valueChanged action="global_paymentType"/>
+            </events>
+          </comboBox>
+        </column>
+        <column headerLabel="OrderFilled" width="80">
+          <textField editable="N" column="ORDER_FILLED"/>
+        </column>
+        <column headerLabel="Sales Rep">
+          <textField editable="N" column="LAST_NAME"/>
+        </column>
+      </grid>
+    </cell>
+  </borderLayout>
+</panel>
+
+<panel name="customer_ordersGridDetach">
+  <borderLayout>
+    <cell docking="Center">
+      <grid name="ordersGrid" dataSource="CUSTOMER_ORDERS1" mouseHover="N" enableColumnResize="Y" enableColumnSort="Y" enableColumnFunctions="Y" autoExpand="Y">
+        <events>
+          <click action="customer_clickOrdersGrid"/>
+        </events>
+        <column headerLabel="Order Id" width="70">
+          <textField column="ID"/>
+        </column>
+        <column headerLabel="Customer Id" width="100">
+          <textField column="CUSTOMER_ID"/>
+        </column>
+        <column headerLabel="Date Ordered">
+          <dateField dateFormat="DD-MM-YYYY" column="DATE_ORDERED"/>
+        </column>
+        <column headerLabel="Date Shipped">
+          <dateField dateFormat="DD-MM-YYYY" column="DATE_SHIPPED"/>
+        </column>
+        <column headerLabel="Total">
+          <textField column="TOTAL"/>
+        </column>
+        <column headerLabel="Payment Type">
+          <textField column="PAYMENT_TYPE"/>
+        </column>
+        <column headerLabel="OrderFilled" width="80">
+          <textField column="ORDER_FILLED"/>
+        </column>
+        <column headerLabel="Sales Rep">
+          <textField column="LAST_NAME"/>
+        </column>
+      </grid>
+    </cell>
+  </borderLayout>
+</panel>
+
+<panel name="customer_ordersGridDetach_menu">
+  <xyLayout>
+    <cell x="0" y="0" width="60" height="25">
+      <menuButton name="viewMenuButton" label="View" popupMenu="viewPopup"/>
+    </cell>
+    <cell x="60" y="0" width="60" height="25">
+      <button styleClass="my-bdf-button" label="New" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/new.png">
+        <events>
+          <buttonPress action="customer_closeDetachGrid"/>
+        </events>
+      </button>
+    </cell>
+    <cell x="120" y="0" width="60" height="25">
+      <button styleClass="my-bdf-button" label="Edit" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/edit.png">
+        <events>
+          <buttonPress action="customer_closeDetachGrid"/>
+        </events>
+      </button>
+    </cell>
+    <cell x="180" y="0" width="60" height="25">
+      <button styleClass="my-bdf-button" label="Delete" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/delete.png">
+        <events>
+          <buttonPress action="customer_closeDetachGrid"/>
+        </events>
+      </button>
+    </cell>
+    <cell x="240" y="0" width="60" height="25">
+      <button styleClass="my-bdf-button" label="Detach" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/maximize.png">
+        <events>
+          <buttonPress action="customer_closeDetachGrid"/>
+        </events>
+      </button>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel name="customer_ordersGrid_menu">
+  <xyLayout>
+    <cell x="0" y="0" width="60" height="25">
+      <menuButton name="viewMenuButton" label="View" popupMenu="viewPopup"/>
+    </cell>
+    <cell x="60" y="0" width="60" height="25">
+      <button name="menuNew" styleClass="my-bdf-button" label="New" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/new.png">
+        <events>
+          <buttonPress action="customer_newOrder"/>
+        </events>
+      </button>
+    </cell>
+    <cell x="120" y="0" width="60" height="25">
+      <button name="menuEdit" styleClass="my-bdf-button" label="Edit" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/edit.png">
+        <events>
+          <buttonPress action="customer_editOrder"/>
+        </events>
+      </button>
+    </cell>
+    <cell x="180" y="0" width="60" height="25">
+      <button name="menuDelete" styleClass="my-bdf-button" label="Delete" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/delete.png">
+        <events>
+          <buttonPress action="customer_deleteOrder"/>
+        </events>
+      </button>
+    </cell>
+    <cell x="240" y="0" width="60" height="25">
+      <button name="detachGrid" styleClass="my-bdf-button" label="Detach" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/maximize.png">
+        <events>
+          <buttonPress action="customer_detachGrid"/>
+        </events>
+      </button>
+    </cell>
+  </xyLayout>
+</panel>
+
+<accordionPanel multiExpand="Y" resizable="Y" name="dashBoard_accordion"/>
+
+<accordionPanel multiExpand="Y" resizable="Y" name="dashBoard_historyAccordian">
+  <accordion panelName="dashBoard_historyPanel" order="2" title="Order History" expanded="Y"/>
+</accordionPanel>
+
+<panel name="dashBoard_historyPanel">
+  <xyLayout>
+    <cell x="0" y="0" width="300" height="350">
+      <categoryChart title="Orders History" name="orderHistory" backgroundColor="#C0C0C0" displayStyle="3D" plotBackgroundColor="#DEE4E5">
+        <subtitle text="Meridian Demo"/>
+        <barRenderer dataSource="CHARTDS1" categoryColumn="DATE_ORDERED" labelFormat="#{value}">
+          <bar valueColumn="TOTAL" legendLabel="Total" color="red" gradientColor="orange"/>
+        </barRenderer>
+        <lineRenderer dataSource="CHARTDS1" categoryColumn="DATE_ORDERED">
+          <line valueColumn="ORDERAVERAGE" legendLabel="Average" color="black"/>
+        </lineRenderer>
+        <categoryAxis position="Bottom"/>
+        <rangeAxis name="RangeAxis" position="Left" default="Y"/>
+        <legend border="N" position="Bottom" visible="Y"/>
+      </categoryChart>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel name="dashBoard_panel">
+  <events>
+    <postInitialize action="order_getOrderInfo"/>
+  </events>
+  <tableLayout cellSpacing="10">
+    <row height="400">
+      <cell hAlign="Full" vAlign="Full">
+        <include panelName="dashBoard_historyAccordian"/>
+      </cell>
+      <cell hAlign="Full" vAlign="Full">
+        <include panelName="dashBoard_shippingAccordion"/>
+      </cell>
+      <cell hAlign="Full" vAlign="Full">
+        <include panelName="dashBoard_proportionAccordion"/>
+      </cell>
+    </row>
+  </tableLayout>
+</panel>
+
+<accordionPanel multiExpand="Y" resizable="Y" name="dashBoard_proportionAccordion">
+  <accordion panelName="dashBoard_proportionPanel" order="1" title="Order Proportion" expanded="Y"/>
+</accordionPanel>
+
+<panel name="dashBoard_proportionPanel">
+  <xyLayout>
+    <cell x="0" y="0" width="300" height="350">
+      <pieChart title="Order Proportion" name="orderProportion" backgroundColor="#C0C0C0" dataSource="CHARTDS1" categoryColumn="ID" slicedColumn="SLICED" valueColumn="TOTAL" labelFormat="#{category}:#{percentage}" displayStyle="3D" plotBackgroundColor="#DEE4E5">
+        <subtitle text="Meridian Demo"/>
+        <legend border="N" position="Top" visible="Y"/>
+      </pieChart>
+    </cell>
+  </xyLayout>
+</panel>
+
+<accordionPanel multiExpand="Y" resizable="Y" name="dashBoard_shippingAccordion">
+  <accordion panelName="dashBoard_shippingPanel" order="3" title="Shipping Time" expanded="Y"/>
+</accordionPanel>
+
+<panel name="dashBoard_shippingPanel">
+  <xyLayout>
+    <cell x="0" y="0" width="300" height="350">
+      <categoryChart title="Shipping Time" name="orderShipping" backgroundColor="#C0C0C0" displayStyle="3D" plotBackgroundColor="#DEE4E5">
+        <subtitle text="Meridian Demo"/>
+        <barRenderer dataSource="CHARTDS1" categoryColumn="DATE_ORDERED" labelFormat="#{value}">
+          <bar valueColumn="TIMETOSHIP" legendLabel="TimeToShip" color="red" gradientColor="orange"/>
+        </barRenderer>
+        <categoryAxis position="Bottom"/>
+        <rangeAxis name="RangeAxis" position="Left" default="Y"/>
+        <legend border="N" position="Bottom" visible="Y"/>
+      </categoryChart>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel name="mainPanel">
+  <tableLayout>
+    <row height="5">
+      <cell/>
+    </row>
+    <row>
+      <cell columnSpan="2" hAlign="Full" vAlign="Top">
+        <include panelName="aux_mainTabPanel"/>
+      </cell>
+    </row>
+    <row height="30">
+      <cell columnSpan="2" hAlign="Center" vAlign="Bottom">
+        <include panelName="aux_statusBarPanel"/>
+      </cell>
+    </row>
+  </tableLayout>
+</panel>
+
+<panel name="order_ImageDescriptionPanel">
+  <xyLayout>
+    <cell width="280" height="100">
+      <textArea wordWrap="Y" column="SHORT_DESC" dataSource="ORDER_ITEMS1"/>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel name="order_ImageLocationPanel">
+  <xyLayout>
+    <cell width="280" height="200">
+      <grid dataSource="INVENTORY1" mouseHover="N" enableColumnResize="Y" enableColumnSort="Y" enableColumnFunctions="Y" autoExpand="Y">
+        <column headerLabel="WId" width="30">
+          <textField column="WAREHOUSE_ID"/>
+        </column>
+        <column headerLabel="Address" width="120">
+          <textField column="ADDRESS"/>
+        </column>
+        <column headerLabel="City" width="70">
+          <textField column="CITY"/>
+        </column>
+        <column headerLabel="InStock" width="40">
+          <textField column="AMOUNT_IN_STOCK"/>
+        </column>
+      </grid>
+    </cell>
+  </xyLayout>
+</panel>
+
+<accordionPanel multiExpand="Y" resizable="Y" name="order_accordion">
+  <accordion panelName="order_imagePanel" order="1" title="Image" height="200" expanded="Y"/>
+  <accordion panelName="order_ImageDescriptionPanel" order="2" title="Description" height="150" expanded="N"/>
+  <accordion panelName="order_ImageLocationPanel" order="3" title="Stock Location" height="150" expanded="Y"/>
+</accordionPanel>
+
+<panel name="order_imagePanel">
+  <xyLayout>
+    <cell width="280" height="200">
+      <image name="image"/>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel preferredWidth="820" preferredWidthPolicy="Dynamic" name="order_infoPanel">
+  <events>
+    <click action="sb_clearStatusBar"/>
+  </events>
+  <xyLayout>
+    <cell x="100" y="10" width="100" height="20">
+      <dateField name="dateOrdered" label="Date Ordered" editable="N" dateFormat="DD-MM-YYYY" column="DATE_ORDERED" dataSource="CUSTOMER_ORDERS1"/>
+    </cell>
+    <cell x="350" y="10" width="100" height="20">
+      <comboBox name="paymentType" filter="N" label="Payment Type" displayColumn="PAYMENT_TYPE" valueColumn="ID" column="PAYMENT_TYPE" dataSource="CUSTOMER_ORDERS1" listDataSource="PAYMENT_TYPE1">
+        <events>
+          <valueChanged action="global_paymentType"/>
+        </events>
+      </comboBox>
+    </cell>
+    <cell x="100" y="35" width="100" height="20">
+      <dateField name="dateShipped" label="Date Shipped" editable="Y" dateFormat="DD-MM-YYYY" column="DATE_SHIPPED" dataSource="CUSTOMER_ORDERS1">
+        <events>
+          <valueChanged action="order_shippedDate"/>
+        </events>
+      </dateField>
+    </cell>
+    <cell x="275" y="35" width="100" height="20">
+      <textLabel font-style="Bold" label="Order Filled"/>
+    </cell>
+    <cell x="350" y="35" width="18" height="20">
+      <radioButton value="Y" enable="Y" label="Yes" labelPosition="Right" buttonGroup="order_orderFilled"/>
+    </cell>
+    <cell x="390" y="35" width="18" height="20">
+      <radioButton value="N" label="No" labelPosition="Right" buttonGroup="order_orderFilled"/>
+    </cell>
+    <cell x="100" y="60" width="50" height="20">
+      <textField name="salesRepId" styleClass="my-bdf-textfield-trigger" tooltip="Search Sales Rep id" label="Sales Rep id" editable="N" column="SALES_REP_ID" dataSource="CUSTOMER_ORDERS1" icon="apps/meridianDemo/images/icons/search.png">
+        <events>
+          <iconClick action="search_SalesRep"/>
+        </events>
+        <targets>
+          <targetOf LOV="customer_lovSalesRep" column="ID"/>
+        </targets>
+      </textField>
+    </cell>
+    <cell x="310" y="60" width="100" height="20">
+      <textLabel font-style="Bold" label="Total" text-align="Left"/>
+    </cell>
+    <cell x="350" y="60" width="100" height="20">
+      <textLabel label="Total" column="TOTAL" dataSource="CUSTOMER_ORDERS1" numberMask="###,###,###.00#"/>
+    </cell>
+    <cell x="5" y="85" width="100" height="20">
+      <textLabel font-style="Bold" label="Sales Rep Name" text-align="Left"/>
+    </cell>
+    <cell x="100" y="85" width="100" height="20">
+      <textLabel name="lastName" label="lastNameData" column="LAST_NAME" dataSource="EMPLOYEES1">
+        <targets>
+          <targetOf LOV="customer_lovSalesRep" column="LAST_NAME"/>
+        </targets>
+      </textLabel>
+    </cell>
+    <cell x="100" y="105" width="450" height="25">
+      <include panelName="order_infoPanel_menu"/>
+    </cell>
+    <cell x="100" y="130" width="480" height="200">
+      <grid name="orderItemsGrid" dataSource="ORDER_ITEMS1" mouseHover="N" enableColumnResize="Y" enableColumnSort="Y" enableColumnFunctions="Y" autoExpand="Y">
+        <events>
+          <selectionChanged action="order_getItemInventory"/>
+          <valueChanged action="order_newItemTotal"/>
+        </events>
+        <column headerLabel="Product Id" width="70">
+          <lovField value="ID" name="productID" column="PRODUCT_ID" icon="apps/meridianDemo/images/icons/search.png" LOV="order_lovSearchProduct"/>
+        </column>
+        <column headerLabel="Product Name" width="170">
+          <textField name="productName" column="NAME"/>
+        </column>
+        <column headerLabel="itd" width="35">
+          <textField column="ITEM_ID"/>
+        </column>
+        <column headerLabel="Price" width="70">
+          <textField name="itemPrice" editable="N" numberMask="###,###,###.00#" column="PRICE"/>
+        </column>
+        <column headerLabel="Quantity" width="70">
+          <textField name="itemQuantity" column="QUANTITY">
+            <events>
+              <focusLost action="order_newItemTotal"/>
+              <valueChanged action="order_newItemTotal"/>
+            </events>
+          </textField>
+        </column>
+        <column headerLabel="Total" width="70">
+          <textField name="itemTotal" editable="N" numberMask="###,###,###.00#" domain="DefaultNumber" column="TOTAL"/>
+        </column>
+      </grid>
+    </cell>
+    <cell x="500" y="350" width="100" height="20">
+      <textField name="totalPrice" label="Total" editable="N" numberMask="###,###,###.00#" domain="DefaultNumber"/>
+    </cell>
+    <cell x="100" y="400" name="violation" width="400" height="50"/>
+    <cell x="650" y="130" width="300" height="480">
+      <include panelName="order_accordion"/>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel name="order_infoPanel_menu">
+  <xyLayout>
+    <cell x="0" y="0" width="60" height="25">
+      <button name="newButton" styleClass="my-bdf-button" label="New" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/new.png">
+        <events>
+          <buttonPress action="order_newOrderItem"/>
+        </events>
+      </button>
+    </cell>
+    <cell x="60" y="0" width="60" height="25">
+      <button name="deleteButton" styleClass="my-bdf-button" label="Delete" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/delete.png">
+        <events>
+          <buttonPress action="order_deleteOrderItem"/>
+        </events>
+      </button>
+    </cell>
+    <cell x="120" y="0" width="120" height="25">
+      <button name="exportToexcel" styleClass="my-bdf-button" label="Export To Excel" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/tree.png">
+        <events>
+          <buttonPress action="order_printToExcel"/>
+        </events>
+      </button>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel name="search_nameCityDetach">
+  <tableLayout>
+    <row height="400">
+      <cell columnSpan="2" hAlign="Full" vAlign="Full">
+        <grid name="nameCityGrid" dataSource="SEARCHDS1" mouseHover="N" enableColumnResize="Y" enableColumnSort="Y" enableColumnFunctions="Y" autoExpand="Y">
+          <events>
+            <click action="search_showSearchResult"/>
+          </events>
+          <column headerLabel="Name">
+            <textField column="NAME"/>
+          </column>
+          <column headerLabel="City">
+            <textField column="CITY"/>
+          </column>
+        </grid>
+      </cell>
+    </row>
+    <row heightPolicy="Dynamic">
+      <cell hAlign="Right" vAlign="Bottom">
+        <button name="OK" label="OK">
+          <events>
+            <buttonPress action="search_detachOk"/>
+          </events>
+        </button>
+      </cell>
+      <cell width="100" hAlign="Right" vAlign="Bottom">
+        <button name="Cancel" label="Cancel">
+          <events>
+            <buttonPress action="search_detachCancel"/>
+          </events>
+        </button>
+      </cell>
+    </row>
+  </tableLayout>
+</panel>
+
+<panel name="search_nameCityDetach_menu">
+  <xyLayout>
+    <cell x="0" y="0" width="60" height="25">
+      <menuButton name="viewMenuButton" label="View" popupMenu="viewPopup"/>
+    </cell>
+    <cell x="60" y="0" width="60" height="25">
+      <button name="detachSearch" styleClass="my-bdf-button" label="Detach" backgroundColor="#DEE4E5" icon="apps/meridianDemo/images/icons/maximize.png">
+        <events>
+          <buttonPress action="search_detachSearch"/>
+        </events>
+      </button>
+    </cell>
+  </xyLayout>
+</panel>
+
+<panel backgroundColor="pink" font-color="red" font-style="Bold" preferredWidth="400" preferredWidthPolicy="Static" name="violation_panel">
+  <xyLayout>
+    <cell x="375" y="0" width="25" height="25">
+      <button backgroundColor="pink" icon="apps/meridianDemo/images/icons/delete.png">
+        <events>
+          <buttonPress action="awx_closeViolation"/>
+        </events>
+      </button>
+    </cell>
+    <cell width="400">
+      <textLabel name="violations" text-align="Left"/>
+    </cell>
+  </xyLayout>
+</panel>
+
+<popupMenu x="0" y="0" name="aux_treeSelection">
+  <menuItem name="country" label="Customers by Country">
+    <events>
+      <menuItemClick action="aux_expandByCountry"/>
+    </events>
+  </menuItem>
+  <menuItem name="salesRep" label="Customers by Sales Rep">
+    <events>
+      <menuItemClick action="aux_expandBySalesRep"/>
+    </events>
+  </menuItem>
+</popupMenu>
+
+<popupMenu x="0" y="0" name="viewPopup">
+  <menu label="Columns">
+    <menuItem name="showAll" label="Show All">
+      <events>
+        <menuItemClick action="viewPopupMenu"/>
+      </events>
+    </menuItem>
+    <separator/>
+    <menuItem name="manageColumns" label="Manage Columns"/>
+  </menu>
+  <menu name="detach" label="Detach"/>
+  <menu name="sort" label="Sort"/>
+  <menu name="reorderColumns" label="Reorder Columns"/>
+  <menu label="Help">
+    <menuItem name="about" label="About"/>
+  </menu>
+</popupMenu>
+
+<menuBar name="commonMenu">
+  <menu label="View" backgroundColor="#DEE4E5">
+    <menu label="Columns">
+      <menuItem label="Show Columns"/>
+      <separator/>
+      <menuItem label="Manage Columns"/>
+    </menu>
+    <menu label="Detach"/>
+    <menu label="Sort"/>
+    <menu label="Reorder Columns"/>
+  </menu>
+  <menu label="Help">
+    <menuItem label="About"/>
+  </menu>
+</menuBar>
+
+<action allowPopups="N" name="aux_displayTabContent"><![CDATA[md_auxnavigation.displayTabContent]]></action>
+
+<action allowPopups="N" name="aux_expandByCountry"><![CDATA[md_auxnavigation.expandByCountry]]></action>
+
+<action allowPopups="N" name="aux_expandBySalesRep"><![CDATA[md_auxnavigation.expandBySalesRep]]></action>
+
+<action allowPopups="Y" name="aux_expandTree"><![CDATA[md_auxnavigation.expandTree]]></action>
+
+<action allowPopups="Y" name="aux_leftClickTree"><![CDATA[md_auxnavigation.leftClickTree]]></action>
+
+<action allowPopups="N" name="awx_closeViolation"><![CDATA[md_awxcommitrollback.closeViolation()]]></action>
+
+<action allowPopups="N" name="awx_doCommit"><![CDATA[md_awxcommitrollback.doCommit()]]></action>
+
+<action allowPopups="N" name="awx_doRollback"><![CDATA[md_awxcommitrollback.doRollback()]]></action>
+
+<action allowPopups="N" name="customer_clickOrdersGrid"><![CDATA[md_customer.clickOrdersGrid]]></action>
+
+<action allowPopups="N" name="customer_closeDetachGrid"><![CDATA[md_customer.closeDetachGrid]]></action>
+
+<action allowPopups="N" name="customer_deleteOrder"><![CDATA[md_customer.deleteOrder]]></action>
+
+<action allowPopups="N" name="customer_detachGrid"><![CDATA[md_customer.detachGrid]]></action>
+
+<action allowPopups="N" name="customer_editOrder"><![CDATA[md_customer.editOrder]]></action>
+
+<action allowPopups="N" name="customer_newOrder"><![CDATA[md_customer.newOrder]]></action>
+
+<action allowPopups="N" name="customer_shippedDate"><![CDATA[MD_CUSTOMER.customerShippedDate]]></action>
+
+<action allowPopups="N" name="global_checkDates"><![CDATA[md_global.checkDates]]></action>
+
+<action allowPopups="N" name="global_paymentType"><![CDATA[md_global.paymentType]]></action>
+
+<action allowPopups="N" name="order_deleteOrderItem"><![CDATA[md_order.deleteOrderItem]]></action>
+
+<action allowPopups="N" name="order_focusGridQuantity"><![CDATA[md_order.focusGridQuantity]]></action>
+
+<action allowPopups="N" name="order_getItemInventory"><![CDATA[md_order.getItemInventory]]></action>
+
+<action allowPopups="N" name="order_getOrderInfo"><![CDATA[md_order.getOrderInfo]]></action>
+
+<action allowPopups="N" name="order_newItemTotal"><![CDATA[md_order.newItemTotal]]></action>
+
+<action allowPopups="N" name="order_newOrderItem"><![CDATA[md_order.newOrderItem]]></action>
+
+<action allowPopups="Y" name="order_printToExcel"><![CDATA[md_order.printToExcel]]></action>
+
+<action allowPopups="N" name="order_shippedDate"><![CDATA[MD_ORDER.orderShippedDate]]></action>
+
+<action allowPopups="N" name="sb_clearStatusBar"><![CDATA[sb.clear]]></action>
+
+<action allowPopups="N" name="search_SalesRep"><![CDATA[md_search.searchSalesRep]]></action>
+
+<action allowPopups="N" name="search_clearNameCity"><![CDATA[md_search.clearSearchNameCity]]></action>
+
+<action allowPopups="N" name="search_detachCancel"><![CDATA[md_search.detachSearchCancel]]></action>
+
+<action allowPopups="N" name="search_detachOk"><![CDATA[md_search.detachSearchOk]]></action>
+
+<action allowPopups="N" name="search_detachSearch"><![CDATA[md_search.detachSearch]]></action>
+
+<action allowPopups="N" name="search_searchNameCity"><![CDATA[md_search.searchNameCity]]></action>
+
+<action allowPopups="N" name="search_showSearchResult"><![CDATA[md_search.showSearchResult]]></action>
+
+<action allowPopups="N" name="viewPopupMenu"><![CDATA[md_viewpopupmenu.showAll]]></action>
+
+<buttonGroup dataSource="CUSTOMER_ORDERS1" column="ORDER_FILLED" name="order_orderFilled"/>
+
+<LOV autoRefresh="N" filterBeforeDisplay="N" okLabel="OK" cancelLabel="Cancel" searchLabel="Search" title="Search and Select: Sales Rep" dataSource="SALESPEOPLE1" name="customer_lovSalesRep">
+  <columns>
+    <column label="ID" initOrder="1" targetComponent="order_infoPanel.salesRepId" dataSourceDefAttribute="ID"/>
+    <column label="FIRST NAME" initOrder="2" visible="N" dataSourceDefAttribute="FIRST_NAME"/>
+    <column label="LAST NAME" initOrder="3" targetComponent="order_infoPanel.lastName" dataSourceDefAttribute="LAST_NAME"/>
+    <column initOrder="4" visible="N" dataSourceDefAttribute="COMMENTS"/>
+    <column initOrder="5" visible="N" dataSourceDefAttribute="COMMISSION_PCT"/>
+    <column initOrder="6" visible="N" dataSourceDefAttribute="DEPT_ID"/>
+    <column initOrder="7" visible="N" dataSourceDefAttribute="EMAIL"/>
+    <column initOrder="8" visible="N" dataSourceDefAttribute="MANAGER_ID"/>
+    <column initOrder="9" visible="N" dataSourceDefAttribute="SALARY"/>
+    <column initOrder="10" visible="N" dataSourceDefAttribute="START_DATE"/>
+    <column initOrder="11" visible="N" dataSourceDefAttribute="TITLE_ID"/>
+    <column initOrder="12" visible="N" dataSourceDefAttribute="USERID"/>
+  </columns>
+  <bindVariables/>
+</LOV>
+
+<LOV autoRefresh="N" filterBeforeDisplay="N" okLabel="OK" cancelLabel="Cancel" searchLabel="Search" title="Search and Select : Product id" dataSource="PRODUCT1" name="order_lovSearchProduct">
+  <events>
+    <close action="order_focusGridQuantity"/>
+  </events>
+  <columns>
+    <column initOrder="1" targetDatasource="ORDER_ITEMS1" dataSourceDefAttribute="ID" targetDatasourceDefAttribute="PRODUCT_ID"/>
+    <column initOrder="2" targetDatasource="ORDER_ITEMS1" dataSourceDefAttribute="NAME" targetDatasourceDefAttribute="NAME"/>
+    <column initOrder="3" visible="N" dataSourceDefAttribute="IMAGE_ID"/>
+    <column initOrder="4" visible="N" dataSourceDefAttribute="CATEGORY_ID"/>
+    <column initOrder="5" visible="N" dataSourceDefAttribute="LONGTEXT_ID"/>
+    <column initOrder="6" visible="N" dataSourceDefAttribute="SHORT_DESC"/>
+    <column initOrder="7" targetDatasource="ORDER_ITEMS1" visible="N" dataSourceDefAttribute="SUGGESTED_WHLSL_PRICE" targetDatasourceDefAttribute="PRICE"/>
+    <column initOrder="8" visible="N" dataSourceDefAttribute="WHLSL_UNITS"/>
+  </columns>
+  <bindVariables/>
+</LOV>
+
+<domain type="Simple" dataType="BLOB" description="Default blob domain" systemDomain="Y" name="DefaultBLOB"/>
+
+<domain type="Simple" dataType="CLOB" description="Default clob domain" systemDomain="Y" name="DefaultCLOB"/>
+
+<domain type="Simple" dataType="DATE" description="Default date domain" systemDomain="Y" name="DefaultDate"/>
+
+<domain type="Simple" dataType="NUMBER" description="Default number domain" systemDomain="Y" name="DefaultNumber"/>
+
+<domain type="Simple" dataType="VARCHAR2" description="Default varchar2 domain" length="4000" systemDomain="Y" name="DefaultVarchar2"/>
+
+<domain type="Multilingual" dataType="VARCHAR2" description="Default lang domain for multilingual keys" length="200" systemDomain="Y" name="lang"/>
+
+<application dataSourceSchema="meridian" type="Desktop" teamCoding="N" sourceControl="N" theme="FS19Default" name="meridianDemo"/>
+
+</fsApp>
